@@ -1,6 +1,6 @@
 # Run Crew Landing — TypeScript/React
 
-Exact recreation of the uploaded static HTML page (`uploads/index_7.html`) as a typed React app.
+A typed React app for the Run Crew landing page.
 
 ## Structure
 - `index.html` — Vite entry, loads Google Fonts (Bebas Neue, Barlow, Barlow Condensed).
