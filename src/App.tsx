@@ -137,6 +137,10 @@ const App: React.FC = () => {
   const [heroImgOpacity, setHeroImgOpacity] = useState(1);
   const cycleIdxRef = useRef(0);
 
+  const screensScrollRef = useRef<HTMLDivElement>(null);
+  const [screensAtStart, setScreensAtStart] = useState(true);
+  const [screensAtEnd, setScreensAtEnd] = useState(false);
+
   useScrollReveal(mainRef);
 
   const closeMobileNav = useCallback(() => {
@@ -198,6 +202,33 @@ const App: React.FC = () => {
       }, 400);
     }, 3000);
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const el = screensScrollRef.current;
+    if (!el) return;
+
+    function updateScreensScrollState() {
+      if (!el) return;
+      setScreensAtStart(el.scrollLeft <= 0);
+      setScreensAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
+    }
+
+    updateScreensScrollState();
+    el.addEventListener('scroll', updateScreensScrollState, { passive: true });
+    window.addEventListener('resize', updateScreensScrollState);
+    return () => {
+      el.removeEventListener('scroll', updateScreensScrollState);
+      window.removeEventListener('resize', updateScreensScrollState);
+    };
+  }, []);
+
+  const scrollScreens = useCallback((direction: 1 | -1) => {
+    const el = screensScrollRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>('.screen-item');
+    const step = card ? card.offsetWidth + 20 : 220;
+    el.scrollBy({ left: direction * step, behavior: 'smooth' });
   }, []);
 
   return (
@@ -360,12 +391,44 @@ const App: React.FC = () => {
               </p>
             </div>
 
-            <div className="screens-scroll reveal" tabIndex={0} role="region" aria-label="App screenshot gallery">
-              {SCREENS.map((src, i) => (
-                <div className="screen-item" key={i}>
-                  <img src={src} alt={`Run Crew app screen ${i + 1}`} />
-                </div>
-              ))}
+            <div className="screens-scroll-wrap">
+              <button
+                type="button"
+                className="screens-arrow screens-arrow-left"
+                onClick={() => scrollScreens(-1)}
+                disabled={screensAtStart}
+                aria-label="Scroll gallery left"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+
+              <div
+                className="screens-scroll reveal"
+                tabIndex={0}
+                role="region"
+                aria-label="App screenshot gallery"
+                ref={screensScrollRef}
+              >
+                {SCREENS.map((src, i) => (
+                  <div className="screen-item" key={i}>
+                    <img src={src} alt={`Run Crew app screen ${i + 1}`} />
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="screens-arrow screens-arrow-right"
+                onClick={() => scrollScreens(1)}
+                disabled={screensAtEnd}
+                aria-label="Scroll gallery right"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
             </div>
           </div>
         </section>
@@ -446,7 +509,7 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            <p className="reveal" style={{ marginTop: 28, fontSize: 13, color: 'var(--muted)', letterSpacing: 0.5 }}>
+            <p className="reveal" style={{ marginTop: 28, fontSize: 13, color: 'var(--muted)', letterSpacing: 0.5, textWrap: 'pretty' }}>
               Heart rate · Calories · Routes · Pace · Distance — all in one place.
             </p>
           </div>
@@ -456,7 +519,7 @@ const App: React.FC = () => {
         <section className="download" id="download">
           <div className="download-inner">
             <div>
-              <h2>LACE UP &amp;<br />START<br />TODAY</h2>
+              <h2>LACE UP &amp;<br />START TODAY</h2>
               <p>
                 Run Crew is free to download on iOS and Android.
                 Join the global running community, find your crew, and go further — together.
